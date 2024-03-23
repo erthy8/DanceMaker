@@ -31,6 +31,7 @@ class VideoProcessor(ABC):
         self.clip = VideoFileClip(self.video_source)
         self.timestamps = [round(tstamp * 1000) for tstamp,
                            frame in self.clip.iter_frames(with_times=True)]
+        self.total_frames = len(self.timestamps)
         self.frame_count = 0
         self._process_video()
 
