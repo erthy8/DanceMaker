@@ -1,12 +1,13 @@
 import numpy as np
-import mediapipe as mp
 import math
 import cv2
 import copy
 import pytube
 from moviepy.editor import VideoFileClip
 from abc import ABC, abstractmethod
+import os
 
+import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.components import containers
@@ -40,8 +41,9 @@ class VideoProcessor(ABC):
         output_clip = self.clip.fl_image(self._process_frame)
         output_clip.write_videofile(
             f"outputs/final-{self.title}.mp4", fps=self.clip.fps)
-        print(f"Segmented video saved as outputs/{self.title}.mp4")
+        print(f"Output video saved as outputs/{self.title}.mp4")
         output_clip.close()
+        os.remove(f"final-{self.title}.mp3")
         self.frame_count = 0
 
     @abstractmethod
