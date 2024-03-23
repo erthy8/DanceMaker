@@ -5,7 +5,6 @@ import copy
 import pytube
 from moviepy.editor import VideoFileClip
 from abc import ABC, abstractmethod
-import os
 
 import mediapipe as mp
 from mediapipe.tasks import python
@@ -43,7 +42,6 @@ class VideoProcessor(ABC):
             f"outputs/final-{self.title}.mp4", fps=self.clip.fps)
         print(f"Output video saved as outputs/{self.title}.mp4")
         output_clip.close()
-        os.remove(f"final-{self.title}.mp3")
         self.frame_count = 0
 
     @abstractmethod
