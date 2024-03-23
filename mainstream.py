@@ -93,6 +93,7 @@ class VideoPoser(VideoProcessor):
                 image_format=mp.ImageFormat.SRGB, data=frame_data)
             landmarks = self.poser.detect_for_video(
                 pred_img, self.timestamps[self.frame_count])
+            self.frame_count += 1
             # Annotate Frame
             output_frame = np.copy(frame_data)
             d_results = landmarks.pose_landmarks
