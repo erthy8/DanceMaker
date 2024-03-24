@@ -132,7 +132,7 @@ def get_live_data(title: str, df_dance):
 
     create_folder_if_not_exists(f"final-{title}")
     with open("logs.txt", "w") as file:
-        file.write(f"final-{title}")
+        file.write(f"{title}")
 
     df_points.to_hdf(
         f"data/final-{title}/livedata.hdf5", key="livedata")
