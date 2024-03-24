@@ -26,7 +26,7 @@ def get_live_data(filename: str, df_dance):
 
         countdown_start_time = time.time()
         real_start_time = countdown_start_time
-        countdown_time = 5
+        countdown_time = 7
         index = 0
         countdown_elapsed_time = (time.time() - countdown_start_time)
 

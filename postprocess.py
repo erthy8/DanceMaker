@@ -48,14 +48,20 @@ if __name__ == "__main__":
         if df1.iloc[i, 1] != None and df2.iloc[i, 1] != None:
             live_angles.append(getAngles(df1.iloc[i,1:]))
             vid_angles.append(getAngles(df2.iloc[i,1:]))
+        
     #linear regression     
-    x = np.array(vid_angles) #.reshape((-1, 1))
+    x = np.array(vid_angles) 
     y = np.array(live_angles)
-    model = LinearRegression().fit(x, y)
 
+    final_array = (1 - (np.abs(x - y) / x)) * 100
+    average = np.mean(final_array)
+
+    model = LinearRegression().fit(x, y)
     score = model.coef_
-    print(score)
-    print(model.score(x,y))
+
+    print(f"average: {average}")
+    print(f"linear regression: {model.score(x,y)}")
+
 
         
         
