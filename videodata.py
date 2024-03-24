@@ -6,7 +6,7 @@ import pytube
 from moviepy.editor import VideoFileClip
 from abc import ABC, abstractmethod
 import pandas as pd
-import os
+from utils import create_folder_if_not_exists
 
 import mediapipe as mp
 from mediapipe.tasks import python
@@ -14,15 +14,6 @@ from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.components import containers
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
-
-
-def create_folder_if_not_exists(folder_name):
-    try:
-        # Create the new folder path
-        os.makedirs("data/" + folder_name)
-    except FileExistsError:
-        # Directory already exists
-        pass
 
 
 class VideoProcessor(ABC):
@@ -56,9 +47,10 @@ class VideoProcessor(ABC):
         self.frame_count = 0
 
         create_folder_if_not_exists(f"final-{self.title}")
-        self.df_points.to_csv(
-            f"data/final-{self.title}/final-{self.title}.csv")
-        print(f"data saved in: data/final-{self.title}/final-{self.title}.csv")
+        self.df_points.to_hdf(
+            f"data/final-{self.title}/final-{self.title}.hdf5", key="videodata")
+        print(
+            f"data saved in: data/final-{self.title}/final-{self.title}.hdf5")
 
     @abstractmethod
     def _process_frame():
@@ -128,10 +120,6 @@ class VideoPoser(VideoProcessor):
                     lm_builder,
                     solutions.pose.POSE_CONNECTIONS,
                     solutions.drawing_styles.get_default_pose_landmarks_style())
-            else:
-                self.df_points.loc[curr_timestamp] = [
-                    None for _ in range(32)]
-
             return output_frame
         else:
             return frame_data
