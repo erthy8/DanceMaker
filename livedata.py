@@ -6,6 +6,10 @@ import time
 from utils import create_folder_if_not_exists
 
 import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+from mediapipe.tasks.python.components import containers
+from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 
 mp_drawing = mp.solutions.drawing_utils
@@ -15,24 +19,25 @@ mp_pose = mp.solutions.pose
 def get_live_data(filename: str, df_dance):
     cap = cv2.VideoCapture(0)
 
-    df_points = pd.DataFrame({i: [] for i in range(32)})
+    df_points = pd.DataFrame({i: [] for i in range(33)})
 
     # Setup mediapipe instance
     with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
 
         countdown_start_time = time.time()
         real_start_time = countdown_start_time
-        countdown_time = 7
+        countdown_time = 5
         index = 0
-        elapsed_time = (time.time() - countdown_start_time)
+        countdown_elapsed_time = (time.time() - countdown_start_time)
+
         while cap.isOpened():
             ret, frame = cap.read()
 
-            if elapsed_time < countdown_time:
+            if countdown_elapsed_time < countdown_time:
                 image = frame
-                cv2.putText(image, "Starting in {} seconds".format(int(countdown_time - elapsed_time)), (10, 50), cv2.FONT_HERSHEY_PLAIN,
+                cv2.putText(image, "Starting in {} seconds".format(int(countdown_time - countdown_elapsed_time)), (10, 50), cv2.FONT_HERSHEY_PLAIN,
                             3, (15, 225, 215), 2)
-                elapsed_time = (time.time() - countdown_start_time)
+                countdown_elapsed_time = (time.time() - countdown_start_time)
                 real_start_time = time.time()
             else:
                 curr_timestamp = int((time.time() - real_start_time) * 1000)
@@ -71,20 +76,28 @@ def get_live_data(filename: str, df_dance):
                                     )
                 else:
                     df_points.loc[curr_timestamp] = [
-                        None for _ in range(32)]
-            # Render detections from video    
-
-            if elapsed_time > df_dance.loc[index]:
-                if df_dance.iloc[index, 1] == None:
-                    continue
-                cur_pose_landmarks = df_dance.iloc[index, 1:]
-                mp_drawing.draw_landmarks(image, cur_pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                                            mp_drawing.DrawingSpec(
-                                                color=(245, 117, 66), thickness=2, circle_radius=2),
-                                            mp_drawing.DrawingSpec(
-                                                color=(245, 66, 230), thickness=2, circle_radius=2)
-                                            )
+                        None for _ in range(33)]
+                    
+                # Render detections from video   
+                df_dance_len = len(df_dance) 
+                if index < df_dance_len and curr_timestamp > df_dance.index[index]:
+                    while index < df_dance_len - 1 and curr_timestamp > df_dance.index[index + 1]:
+                        index += 1
+                    if df_dance.iloc[index, 1] != None:
+                        cur_pose_landmarks = df_dance.iloc[index, 1:]
+                        solutions.drawing_utils.draw_landmarks(
+                            image,
+                            cur_pose_landmarks.iloc[0],
+                            solutions.pose.POSE_CONNECTIONS,
+                            solutions.drawing_styles.get_default_pose_landmarks_style())
+                    index+=1
+                    
+                    
+                if index >= df_dance_len:
+                    break
+                
             cv2.imshow('Mediapipe Feed', image)
+
 
             if cv2.waitKey(10) & 0xFF == ord('q'):
                 break
@@ -94,7 +107,7 @@ def get_live_data(filename: str, df_dance):
 
     create_folder_if_not_exists(f"final-{title}")
     with open("logs.txt", "w") as file:
-            file.write(title)
+            file.write(f"final-{title}")
 
     df_points.to_hdf(
         f"data/final-{title}/livedata.hdf5", key="livedata")
@@ -102,6 +115,6 @@ def get_live_data(filename: str, df_dance):
 
 
 if __name__ == "__main__":
-    title = ""
-    df_dance = input("Input dataframe file name: ")
+    title = "The Robot- Fortnite Emote"
+    df_dance = pd.read_hdf('./data/final-The Robot- Fortnite Emote/videodata.hdf5', key='videodata')
     get_live_data(title, df_dance)

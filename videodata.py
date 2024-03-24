@@ -6,7 +6,7 @@ import pytube
 from moviepy.editor import VideoFileClip
 from abc import ABC, abstractmethod
 import pandas as pd
-from utils import create_folder_if_not_exists, create_textfile_if_not_exists
+from utils import create_folder_if_not_exists
 
 import mediapipe as mp
 from mediapipe.tasks import python
@@ -19,7 +19,7 @@ from mediapipe.framework.formats import landmark_pb2
 class VideoProcessor(ABC):
 
     def __init__(self):
-        self.df_points = pd.DataFrame({i: [] for i in range(32)})
+        self.df_points = pd.DataFrame({i: [] for i in range(33)})
 
     def __call__(self, video: pytube.YouTube):
         self.video = video
@@ -43,12 +43,16 @@ class VideoProcessor(ABC):
         output_clip.write_videofile(
             f"outputs/final-{self.title}.mp4", fps=self.clip.fps)
         print(f"Output video saved as outputs/{self.title}.mp4")
+        audio_clip = output_clip.audio
+        audio_dir = "audio/"
+        audio_clip.write_audiofile(audio_dir + f"{self.title}.mp3")
+        print(f"Audio clip saved as audio/{self.title}.mp3")
         output_clip.close()
         self.frame_count = 0
 
         create_folder_if_not_exists(f"final-{self.title}")
         with open("logs.txt", "w") as file:
-            file.write(self.title)
+            file.write(f"final-{self.title}")
 
         self.df_points.to_hdf(
             f"data/final-{self.title}/videodata.hdf5", key="videodata")
@@ -113,9 +117,7 @@ class VideoPoser(VideoProcessor):
             if len(poses) > 0:
                 pose = poses[0]
                 lm_builder = landmark_pb2.NormalizedLandmarkList()
-                lm_builder.landmark.extend([
-                    landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in pose
-                ])
+                lm_builder.landmark.extend([landmark_pb2.NormalizedLandmark(x=lmd.x, y=lmd.y, z=lmd.z) for lmd in pose])
 
                 self.df_points.loc[curr_timestamp] = lm_builder
                 solutions.drawing_utils.draw_landmarks(
@@ -124,7 +126,7 @@ class VideoPoser(VideoProcessor):
                     solutions.pose.POSE_CONNECTIONS,
                     solutions.drawing_styles.get_default_pose_landmarks_style())
             else:
-                self.df_points.loc[curr_timestamp] = [None for _ in range(32)]
+                self.df_points.loc[curr_timestamp] = [None for _ in range(33)]
             return output_frame
         else:
             return frame_data

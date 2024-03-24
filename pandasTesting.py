@@ -1,4 +1,5 @@
 import pandas as pd
 
-with open("logs.txt", "w") as file:
-            file.write("BBB")
+df_dance = pd.read_hdf('./data/final-The Robot- Fortnite Emote/videodata.hdf5', key='videodata')
+print(df_dance)
+print(len(df_dance))
