@@ -126,12 +126,12 @@ def get_live_data(title: str, df_dance):
         cap.release()
         cv2.destroyAllWindows()
 
-    create_folder_if_not_exists(str(title))
+    create_folder_if_not_exists(f"final-{title}")
     with open("logs.txt", "w") as file:
             file.write(str(title))
 
     df_points.to_hdf(
-        f"data/{title}/livedata.hdf5", key="livedata")
+        f"data/final-{title}/livedata.hdf5", key="livedata")
     print(f"data saved in: data/final-{title}/livedata.hdf5")
 
 
