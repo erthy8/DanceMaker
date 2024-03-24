@@ -117,9 +117,10 @@ class VideoPoser(VideoProcessor):
             if len(poses) > 0:
                 pose = poses[0]
                 lm_builder = landmark_pb2.NormalizedLandmarkList()
-                lm_builder.landmark.extend([landmark_pb2.NormalizedLandmark(x=lmd.x, y=lmd.y, z=lmd.z) for lmd in pose])
+                lm_builder.landmark.extend([landmark_pb2.NormalizedLandmark(
+                    x=lmd.x, y=lmd.y, z=lmd.z) for lmd in pose])
 
-                self.df_points.loc[curr_timestamp] = lm_builder
+                self.df_points.loc[curr_timestamp] = lm_builder.landmark
                 solutions.drawing_utils.draw_landmarks(
                     output_frame,
                     lm_builder,

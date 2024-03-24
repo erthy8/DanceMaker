@@ -2,18 +2,27 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
+
 def getAngles(series):
     result = []
     # print(series[12].landmark[1])
     # lndmrk = series[12].landmark[1]
-    result.append(calculate_angle(series[12].landmark[12],series[12].landmark[14], series[12].landmark[16])) #left elbow - 12, 14, 16
-    result.append(calculate_angle(series[12].landmark[11], series[12].landmark[13], series[12].landmark[15])) #right elbow - 11,13,15
-    result.append(calculate_angle(series[12].landmark[14], series[12].landmark[12], series[12].landmark[24])) #left armpit - 14,12,24
-    result.append(calculate_angle(series[12].landmark[13], series[12].landmark[11], series[12].landmark[23])) #right armpit - 13,11,23
-    result.append(calculate_angle(series[12].landmark[12], series[12].landmark[24], series[12].landmark[26])) #left hip - 12,24,26
-    result.append(calculate_angle(series[12].landmark[11], series[12].landmark[23], series[12].landmark[25])) #right hip - 11,23,25
-    result.append(calculate_angle(series[12].landmark[24], series[12].landmark[26], series[12].landmark[28])) #left knee - 24,26,28
-    result.append(calculate_angle(series[12].landmark[23], series[12].landmark[25], series[12].landmark[27])) #right knee - 23,25,27
+    result.append(calculate_angle(
+        series[12], series[14], series[16]))  # left elbow
+    result.append(calculate_angle(
+        series[11], series[13], series[15]))  # right elbow
+    result.append(calculate_angle(
+        series[14], series[12], series[24]))  # left armpit
+    result.append(calculate_angle(
+        series[13], series[11], series[23]))  # right armpit
+    result.append(calculate_angle(
+        series[12], series[24], series[26]))  # left hip
+    result.append(calculate_angle(
+        series[11], series[23], series[25]))  # right hip
+    result.append(calculate_angle(
+        series[24], series[26], series[28]))  # left knee
+    result.append(calculate_angle(
+        series[23], series[25], series[27]))  # right knee
     return result
 
 
@@ -31,26 +40,29 @@ def calculate_angle(a, b, c):
 
     return angle
 
-if __name__ == "__main__": 
+
+if __name__ == "__main__":
     title = ""
     with open('logs.txt', 'r') as file:
-    # Iterate over lines
+        # Iterate over lines
         for line in file:
             title = line
             break  # Break after the first iteration
 
-    df1 = pd.read_hdf(f'data/{title}/livedata.hdf5', key = "livedata") #path to uploaded dance dataframe
-    df2 = pd.read_hdf(f'data/{title}/videodata.hdf5', key = "videodata") #path to live dance dataframe
+    # path to uploaded dance dataframe
+    df1 = pd.read_hdf(f'data/{title}/livedata.hdf5', key="livedata")
+    # path to live dance dataframe
+    df2 = pd.read_hdf(f'data/{title}/videodata.hdf5', key="videodata")
     live_angles = []
     vid_angles = []
-    #elbow angle, hip angle, knee angle, armpit angle
+    # elbow angle, hip angle, knee angle, armpit angle
     for i in range(min(len(df1), len(df2))):
-        if df1.iloc[i, 1] != None and df2.iloc[i, 1] != None:
-            live_angles.append(getAngles(df1.iloc[i,1:]))
-            vid_angles.append(getAngles(df2.iloc[i,1:]))
-        
-    #linear regression     
-    x = np.array(vid_angles) 
+        if df1.iloc[i, 0] != None and df2.iloc[i, 0] != None:
+            live_angles.append(getAngles(df1.iloc[i, 0:]))
+            vid_angles.append(getAngles(df2.iloc[i, 0:]))
+
+    # linear regression
+    x = np.array(vid_angles)
     y = np.array(live_angles)
 
     final_array = (1 - (np.abs(x - y) / x)) * 100
@@ -61,9 +73,3 @@ if __name__ == "__main__":
 
     print(f"average: {average}")
     print(f"linear regression: {model.score(x,y)}")
-
-
-        
-        
-    
-
