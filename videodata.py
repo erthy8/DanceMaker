@@ -48,9 +48,9 @@ class VideoProcessor(ABC):
 
         create_folder_if_not_exists(f"final-{self.title}")
         self.df_points.to_hdf(
-            f"data/final-{self.title}/final-{self.title}.hdf5", key="videodata")
+            f"data/video-{self.title}/video-{self.title}.hdf5", key="videodata")
         print(
-            f"data saved in: data/final-{self.title}/final-{self.title}.hdf5")
+            f"data saved in: data/video-{self.title}/video-{self.title}.hdf5")
 
     @abstractmethod
     def _process_frame():

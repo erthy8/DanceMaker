@@ -89,8 +89,8 @@ def get_live_data(filename: str):
 
     create_folder_if_not_exists(f"final-{title}")
     df_points.to_hdf(
-        f"data/final-{title}/final-{title}.hdf5", key="livedata")
-    print(f"data saved in: data/final-{title}.hdf5")
+        f"data/live-{title}/final-{title}.hdf5", key="livedata")
+    print(f"data saved in: data/live-{title}.hdf5")
 
 
 if __name__ == "__main__":
