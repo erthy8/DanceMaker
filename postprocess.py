@@ -41,7 +41,7 @@ def calculate_angle(a, b, c):
     return angle
 
 
-if __name__ == "__main__":
+def postProcessScore():
     title = ""
     with open('logs.txt', 'r') as file:
         # Iterate over lines
@@ -50,9 +50,9 @@ if __name__ == "__main__":
             break  # Break after the first iteration
 
     # path to uploaded dance dataframe
-    df1 = pd.read_hdf(f'data/{title}/livedata.hdf5', key="livedata")
+    df1 = pd.read_hdf(f'data/final-{title}/livedata.hdf5', key="livedata")
     # path to live dance dataframe
-    df2 = pd.read_hdf(f'data/{title}/videodata.hdf5', key="videodata")
+    df2 = pd.read_hdf(f'data/final-{title}/videodata.hdf5', key="videodata")
     live_angles = []
     vid_angles = []
     # elbow angle, hip angle, knee angle, armpit angle
@@ -70,6 +70,8 @@ if __name__ == "__main__":
 
     model = LinearRegression().fit(x, y)
     score = model.coef_
+    score = model.score(x, y)
+    return score
 
     print(f"average: {average}")
     print(f"linear regression: {model.score(x,y)}")
