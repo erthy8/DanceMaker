@@ -92,7 +92,7 @@ def get_live_data(title: str, df_dance):
                     x1, y1, x2, y2 = None, None, None, None
                     if len(bbox.boxes.xyxy) > 0:
                         x1, y1, x2, y2 = bbox.boxes.xyxy[0].tolist()
-                        x1, y1, x2, y2 = x1 / width, y1 / height, x2 / width, y2 / height 
+                        x1, y1, x2, y2 = x1 / width, y1 / height, x2 / width, y2 / height
 
                         color = (255, 0, 0)  # Green
                         thickness = 2
@@ -102,18 +102,21 @@ def get_live_data(title: str, df_dance):
                     lm_builder.landmark.extend([
                         landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in landmarks
                     ])
-                    df_points.loc[curr_timestamp] = list(lm_builder.landmark) + [x1, y1, x2, y2]
+                    df_points.loc[curr_timestamp] = list(
+                        lm_builder.landmark) + [x1, y1, x2, y2]
 
                     # print(str(round(coords[0][1], 2)))
+                    """
                     visual_points = lm_builder.landmark[11:17] + \
                         lm_builder.landmark[23:29]
-                    """for lmd in visual_points:
+                    for lmd in visual_points:
                         cv2.putText(image, str(round(lmd.x, 2)) + ", " + str(round(lmd.y, 2)),
                                     tuple(np.multiply([lmd.x, lmd.y], [
                                         640, 480]).astype(int)),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (
                                         255, 255, 255), 2, cv2.LINE_AA
-                                    )"""
+                                    )
+                                    """
                 else:
                     df_points.loc[curr_timestamp] = [
                         None for _ in range(37)]
@@ -129,18 +132,22 @@ def get_live_data(title: str, df_dance):
                             width34, height34 = abs(x4 - x3), abs(y4 - y3)
                             width12, height12 = abs(x2 - x1), abs(y2 - y1)
                             width_ratio, height_ratio = width12 / width34, height12 / height34
-                            
+
                             x34_mid, y34_mid = (x4 + x3) / 2, (y4 + y3) / 2
                             x12_mid, y12_mid = (x2 + x1) / 2, (y2 + y1) / 2
-                            translation_vector = (x34_mid - x12_mid, y34_mid - y12_mid)
-                            
+                            translation_vector = (
+                                x34_mid - x12_mid, y34_mid - y12_mid)
+
                             cur_pose_landmarks = landmark_pb2.NormalizedLandmarkList()
                             for i, value in enumerate(df_dance.iloc[
-                                index][:33].tolist()):
-                                x = (value.x - translation_vector[0]) + (value.x - x34_mid) * width_ratio / 2
-                                y = (value.y - translation_vector[1]) + (value.y - y34_mid) * height_ratio / 2
+                                    index][:33].tolist()):
+                                x = (
+                                    value.x - translation_vector[0]) + (value.x - x34_mid) * width_ratio / 2
+                                y = (
+                                    value.y - translation_vector[1]) + (value.y - y34_mid) * height_ratio / 2
                                 z = value.z
-                                cur_pose_landmarks.landmark.append(landmark_pb2.NormalizedLandmark(x=x, y=y, z=z))
+                                cur_pose_landmarks.landmark.append(
+                                    landmark_pb2.NormalizedLandmark(x=x, y=y, z=z))
                         else:
                             cur_pose_landmarks = landmark_pb2.NormalizedLandmarkList()
                             cur_pose_landmarks.landmark.extend([landmark_pb2.NormalizedLandmark(
