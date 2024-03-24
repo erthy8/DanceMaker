@@ -6,7 +6,7 @@ import pytube
 from moviepy.editor import VideoFileClip
 from abc import ABC, abstractmethod
 import pandas as pd
-from utils import create_folder_if_not_exists
+from utils import create_folder_if_not_exists, create_textfile_if_not_exists
 
 import mediapipe as mp
 from mediapipe.tasks import python
@@ -47,6 +47,9 @@ class VideoProcessor(ABC):
         self.frame_count = 0
 
         create_folder_if_not_exists(f"final-{self.title}")
+        with open("logs.txt", "w") as file:
+            file.write(self.title)
+
         self.df_points.to_hdf(
             f"data/final-{self.title}/videodata.hdf5", key="videodata")
         print(

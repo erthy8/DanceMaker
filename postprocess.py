@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
 
 def getAngles(series):
     result = []
@@ -28,9 +30,15 @@ def calculate_angle(a, b, c):
     return angle
 
 if name == "__main__": 
-    df1 = ... #path to uploaded dance dataframe
-    df2 = ... #path to live dance dataframe
-    score = 0
+    title = ""
+    with open('logs.txt', 'r') as file:
+    # Iterate over lines
+        for line in file:
+            title = line
+            break  # Break after the first iteration
+
+    df1 = pd.read_hdf(f'/data/{title}/livedata.hdf5', key = "livedata") #path to uploaded dance dataframe
+    df2 = pd.read_hdf(f'/data/{title}/videodata.hdf5', key = "videodata") #path to live dance dataframe
     live_angles = []
     vid_angles = []
     #elbow angle, hip angle, knee angle, armpit angle
@@ -38,7 +46,12 @@ if name == "__main__":
         live_angles.append(getAngles(df1[i]))
         vid_angles.append(getAngles(df2[i]))
     #linear regression     
-    x = 
+    x = np.array(vid_angles).reshape((-1, 1))
+    y = np.array(live_angles)
+    model = LinearRegression().fit(x, y)
+
+    score = model.coef
+
         
         
     

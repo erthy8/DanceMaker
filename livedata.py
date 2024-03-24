@@ -12,7 +12,7 @@ mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 
-def get_live_data(filename: str):
+def get_live_data(filename: str, df_dance):
     cap = cv2.VideoCapture(0)
 
     df_points = pd.DataFrame({i: [] for i in range(32)})
@@ -23,6 +23,7 @@ def get_live_data(filename: str):
         countdown_start_time = time.time()
         real_start_time = countdown_start_time
         countdown_time = 7
+        index = 0
         elapsed_time = (time.time() - countdown_start_time)
         while cap.isOpened():
             ret, frame = cap.read()
@@ -68,17 +69,21 @@ def get_live_data(filename: str):
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (
                                         255, 255, 255), 2, cv2.LINE_AA
                                     )
-                    # Render detections
-                    mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                                              mp_drawing.DrawingSpec(
-                                                  color=(245, 117, 66), thickness=2, circle_radius=2),
-                                              mp_drawing.DrawingSpec(
-                                                  color=(245, 66, 230), thickness=2, circle_radius=2)
-                                              )
                 else:
                     df_points.loc[curr_timestamp] = [
                         None for _ in range(32)]
+            # Render detections from video    
 
+            if elapsed_time > df_dance.loc[index]:
+                if df_dance.iloc[index, 1] == None:
+                    continue
+                cur_pose_landmarks = df_dance.iloc[index, 1:]
+                mp_drawing.draw_landmarks(image, cur_pose_landmarks, mp_pose.POSE_CONNECTIONS,
+                                            mp_drawing.DrawingSpec(
+                                                color=(245, 117, 66), thickness=2, circle_radius=2),
+                                            mp_drawing.DrawingSpec(
+                                                color=(245, 66, 230), thickness=2, circle_radius=2)
+                                            )
             cv2.imshow('Mediapipe Feed', image)
 
             if cv2.waitKey(10) & 0xFF == ord('q'):
@@ -88,6 +93,9 @@ def get_live_data(filename: str):
         cv2.destroyAllWindows()
 
     create_folder_if_not_exists(f"final-{title}")
+    with open("logs.txt", "w") as file:
+            file.write(title)
+
     df_points.to_hdf(
         f"data/final-{title}/livedata.hdf5", key="livedata")
     print(f"data saved in: data/final-{title}/livedata.hdf5")
@@ -95,4 +103,5 @@ def get_live_data(filename: str):
 
 if __name__ == "__main__":
     title = ""
-    get_live_data(title)
+    df_dance = input("Input dataframe file name: ")
+    get_live_data(title, df_dance)
