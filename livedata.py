@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import time
 from utils import create_folder_if_not_exists
+from ultralytics import YOLO
 
 import mediapipe as mp
 from mediapipe.tasks import python
@@ -18,8 +19,9 @@ mp_pose = mp.solutions.pose
 
 def get_live_data(filename: str, df_dance):
     cap = cv2.VideoCapture(0)
+    yolo = YOLO('YOLOv9/best.pt')
 
-    df_points = pd.DataFrame({i: [] for i in range(33)})
+    df_points = pd.DataFrame({i: [] for i in range(37)})
 
     # Setup mediapipe instance
     with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
@@ -44,6 +46,8 @@ def get_live_data(filename: str, df_dance):
 
                 # Recolor image to RGB
                 image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                height, width = image.shape[:2]
+
                 image.flags.writeable = False
 
                 # Make detection
@@ -58,25 +62,36 @@ def get_live_data(filename: str, df_dance):
                 if landmarks is not None:
                     landmarks = landmarks.landmark
 
+                    bbox = yolo.track(image)
+                    bbox = bbox[0]
+                    x1, y1, x2, y2 = None, None, None, None
+                    if len(bbox.boxes.xyxy) > 0:
+                        x1, y1, x2, y2 = bbox.boxes.xyxy[0].tolist()
+                        x1, y1, x2, y2 = x1 / width, y1 / height, x2 / width, y2 / height 
+
+                        color = (255, 0, 0)  # Green
+                        thickness = 2
+                       # cv2.rectangle(image, (int(x1 * width), int(y1 * height)), (int(x2 * width), int(y2 * height)), color, thickness)
+
                     lm_builder = landmark_pb2.NormalizedLandmarkList()
                     lm_builder.landmark.extend([
                         landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in landmarks
                     ])
-                    df_points.loc[curr_timestamp] = lm_builder.landmark
+                    df_points.loc[curr_timestamp] = list(lm_builder.landmark) + [x1, y1, x2, y2]
 
                     # print(str(round(coords[0][1], 2)))
                     visual_points = lm_builder.landmark[11:17] + \
                         lm_builder.landmark[23:29]
-                    for lmd in visual_points:
+                    """for lmd in visual_points:
                         cv2.putText(image, str(round(lmd.x, 2)) + ", " + str(round(lmd.y, 2)),
                                     tuple(np.multiply([lmd.x, lmd.y], [
                                         640, 480]).astype(int)),
                                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (
                                         255, 255, 255), 2, cv2.LINE_AA
-                                    )
+                                    )"""
                 else:
                     df_points.loc[curr_timestamp] = [
-                        None for _ in range(33)]
+                        None for _ in range(37)]
 
                 # Render detections from video
                 df_dance_len = len(df_dance)
@@ -84,9 +99,27 @@ def get_live_data(filename: str, df_dance):
                     while index < df_dance_len - 1 and curr_timestamp > df_dance.index[index + 1]:
                         index += 1
                     if df_dance.iloc[index, 0] != None:
-                        cur_pose_landmarks = landmark_pb2.NormalizedLandmarkList()
-                        cur_pose_landmarks.landmark.extend(
-                            df_dance.iloc[index].tolist())
+                        if x2 != None:
+                            x3, y3, x4, y4 = df_dance.iloc[index, 33:]
+                            width34, height34 = abs(x4 - x3), abs(y4 - y3)
+                            width12, height12 = abs(x2 - x1), abs(y2 - y1)
+                            width_ratio, height_ratio = width12 / width34, height12 / height34
+                            
+                            x34_mid, y34_mid = (x4 + x3) / 2, (y4 + y3) / 2
+                            x12_mid, y12_mid = (x2 + x1) / 2, (y2 + y1) / 2
+                            translation_vector = (x34_mid - x12_mid, y34_mid - y12_mid)
+                            
+                            cur_pose_landmarks = landmark_pb2.NormalizedLandmarkList()
+                            for i, value in enumerate(df_dance.iloc[
+                                index][:33].tolist()):
+                                x = (value.x - translation_vector[0]) + (value.x - x34_mid) * width_ratio / 2
+                                y = (value.y - translation_vector[1]) + (value.y - y34_mid) * height_ratio / 2
+                                z = value.z
+                                cur_pose_landmarks.landmark.append(landmark_pb2.NormalizedLandmark(x=x, y=y, z=z))
+                        else:
+                            cur_pose_landmarks = landmark_pb2.NormalizedLandmarkList()
+                            cur_pose_landmarks.landmark.extend([landmark_pb2.NormalizedLandmark(
+                                                                x=lmd.x, y=lmd.y, z=lmd.z) for lmd in df_dance.iloc[index][:33]])
                         solutions.drawing_utils.draw_landmarks(
                             image,
                             cur_pose_landmarks,

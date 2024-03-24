@@ -7,6 +7,7 @@ from moviepy.editor import VideoFileClip
 from abc import ABC, abstractmethod
 import pandas as pd
 from utils import create_folder_if_not_exists
+from ultralytics import YOLO
 
 import mediapipe as mp
 from mediapipe.tasks import python
@@ -19,7 +20,7 @@ from mediapipe.framework.formats import landmark_pb2
 class VideoProcessor(ABC):
 
     def __init__(self):
-        self.df_points = pd.DataFrame({i: [] for i in range(33)})
+        self.df_points = pd.DataFrame({i: [] for i in range(37)})
 
     def __call__(self, video: pytube.YouTube):
         self.video = video
@@ -98,13 +99,16 @@ class VideoSegmenter(VideoProcessor):
 
 class VideoPoser(VideoProcessor):
 
-    def __init__(self, poser: vision.ImageSegmenter):
+    def __init__(self, poser: vision.ImageSegmenter, yolo):
         super(VideoPoser, self).__init__()
         self.poser = poser
+        self.yolo = yolo
 
     def _process_frame(self, frame_data: np.ndarray):
         if self.frame_count < self.total_frames:
+            height, width = frame_data.shape[:2]
             curr_timestamp = self.timestamps[self.frame_count]
+            
             pred_img = mp.Image(
                 image_format=mp.ImageFormat.SRGB, data=frame_data)
             landmarks = self.poser.detect_for_video(
@@ -119,15 +123,27 @@ class VideoPoser(VideoProcessor):
                 lm_builder = landmark_pb2.NormalizedLandmarkList()
                 lm_builder.landmark.extend([landmark_pb2.NormalizedLandmark(
                     x=lmd.x, y=lmd.y, z=lmd.z) for lmd in pose])
+                    
+                bbox = self.yolo.track(output_frame)
+                bbox = bbox[0]
+                x1, y1, x2, y2 = None, None, None, None
+                if len(bbox.boxes.xyxy) > 0:
+                    x1, y1, x2, y2 = bbox.boxes.xyxy[0].tolist()
+                    x1, y1, x2, y2 = x1 / width, y1 / height, x2 / width, y2 / height 
 
-                self.df_points.loc[curr_timestamp] = lm_builder.landmark
+                    color = (0, 255, 0)  # Green
+                    thickness = 2
+                    cv2.rectangle(output_frame, (int(x1 * width), int(y1 * height)), (int(x2 * width), int(y2 * height)), color, thickness)
+
                 solutions.drawing_utils.draw_landmarks(
                     output_frame,
                     lm_builder,
                     solutions.pose.POSE_CONNECTIONS,
                     solutions.drawing_styles.get_default_pose_landmarks_style())
+                
+                self.df_points.loc[curr_timestamp] = list(lm_builder.landmark) + [x1, y1, x2, y2]
             else:
-                self.df_points.loc[curr_timestamp] = [None for _ in range(33)]
+                self.df_points.loc[curr_timestamp] = [None for _ in range(37)]
             return output_frame
         else:
             return frame_data
@@ -153,7 +169,8 @@ if __name__ == "__main__":
             running_mode=vision.RunningMode.VIDEO,
             output_segmentation_masks=False)
         detector = vision.PoseLandmarker.create_from_options(options)
-        processor = VideoPoser(detector)
+        yolo = YOLO("YOLOv9/best.pt")
+        processor = VideoPoser(detector, yolo)
 
     else:
         quit("Invalid Mode")
