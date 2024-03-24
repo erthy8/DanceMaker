@@ -31,7 +31,7 @@ def calculate_angle(a, b, c):
 
     return angle
 
-if __name__ == "__main__": 
+def postProcessScore(): 
     title = ""
     with open('logs.txt', 'r') as file:
     # Iterate over lines
@@ -58,6 +58,8 @@ if __name__ == "__main__":
 
     model = LinearRegression().fit(x, y)
     score = model.coef_
+    score = model.score(x,y)
+    return score
 
     print(f"average: {average}")
     print(f"linear regression: {model.score(x,y)}")
