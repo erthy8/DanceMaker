@@ -45,7 +45,7 @@ def start_processing():
         output_segmentation_masks=False)
     detector = vision.PoseLandmarker.create_from_options(options)
     yolo = YOLO("YOLOv9/best.pt")
-    processor = VideoPoser(detector)
+    processor = VideoPoser(detector, yolo)
 
     if "youtube" in entry.get():
         youtube_url = entry.get()
