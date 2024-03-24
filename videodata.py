@@ -123,6 +123,8 @@ class VideoPoser(VideoProcessor):
                     lm_builder,
                     solutions.pose.POSE_CONNECTIONS,
                     solutions.drawing_styles.get_default_pose_landmarks_style())
+            else:
+                self.df_points.loc[curr_timestamp] = [None for _ in range(32)]
             return output_frame
         else:
             return frame_data

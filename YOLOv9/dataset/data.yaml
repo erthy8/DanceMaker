@@ -1,0 +1,6 @@
+path: C:\Users\ddcha\Desktop\Coding\Git Repositories\DanceMaker\YOLOv9\dataset
+train: ../train/images
+val: ../valid/images
+
+nc: 1
+names: ['person']
