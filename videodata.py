@@ -52,7 +52,7 @@ class VideoProcessor(ABC):
 
         create_folder_if_not_exists(f"final-{self.title}")
         with open("logs.txt", "w") as file:
-            file.write(f"final-{self.title}")
+            file.write(self.title)
 
         self.df_points.to_hdf(
             f"data/final-{self.title}/videodata.hdf5", key="videodata")

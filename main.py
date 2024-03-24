@@ -1,4 +1,5 @@
 import tkinter as tk
+import h5py
 from tkinter import filedialog
 from tkinter import font
 from tkinter import ttk
@@ -6,10 +7,25 @@ from mediapipe.tasks.python import vision
 from mediapipe.tasks import python
 import pandas as pd
 import pytube
+import os
 import re
 from videodata import VideoPoser
 from livedata import get_live_data
 from postprocess import postProcessScore
+
+def select_file_and_save(data):
+    # Open a file dialog window to select a file location for saving
+    initial_dir = os.path.join(os.path.expanduser('~'), 'data', "final-new", 'videodata.hdf5') 
+    file_path = filedialog.asksaveasfilename(defaultextension=".h5", filetypes=[("HDF5 files", "*.h5"), ("All files", "*.*")])
+    
+    # Check if a file location was specified
+    if file_path:
+        # Save the data to the specified file location
+        with h5py.File(file_path, 'w') as hf:
+        # Create a dataset in the HDF5 file and write the data
+            hf.create_dataset('data', data=data)
+        print("Data saved to:", file_path)
+
 
 def start_processing():
     label.pack_forget()
@@ -48,7 +64,7 @@ def live_processing():
         for line in file:
             title = line
             break  # Break after the first iteration
-    df_dance = pd.read_hdf(f'./data/{title}/videodata.hdf5', key='videodata')
+    df_dance = pd.read_hdf(f'./data/final-{title}/videodata.hdf5', key='videodata')
     get_live_data(title, df_dance)
     
 
@@ -110,7 +126,7 @@ style.configure("RoundedPink.TButton", borderwidth=0)
 style.map("RoundedPink.TButton", foreground=[('pressed', "#2E2E2E"), ('active', "#2E2E2E")])
 style.configure("RoundedGreen.TButton", borderwidth=0)
 style.map("RoundedGreen.TButton", foreground=[('pressed', "#2E2E2E"), ('active', "#2E2E2E")])
-select_file_button = ttk.Button(root, text="Select HDF5 File", command=select_file, style="RoundedPink.TButton")
+select_file_button = ttk.Button(root, text="Select HDF5 File", command=select_file_and_save, style="RoundedPink.TButton")
 select_file_button.pack(pady=5)
 
 start_button = ttk.Button(root, text="Start", command=start_processing, style="RoundedPink.TButton")
