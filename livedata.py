@@ -62,7 +62,7 @@ def get_live_data(filename: str, df_dance):
                     lm_builder.landmark.extend([
                         landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in landmarks
                     ])
-                    df_points.loc[curr_timestamp] = lm_builder.landmark
+                    df_points.loc[curr_timestamp] = lm_builder
 
                     # print(str(round(coords[0][1], 2)))
                     visual_points = lm_builder.landmark[11:17] + \
@@ -77,27 +77,27 @@ def get_live_data(filename: str, df_dance):
                 else:
                     df_points.loc[curr_timestamp] = [
                         None for _ in range(33)]
-
-                # Render detections from video
-                df_dance_len = len(df_dance)
+                    
+                # Render detections from video   
+                df_dance_len = len(df_dance) 
                 if index < df_dance_len and curr_timestamp > df_dance.index[index]:
                     while index < df_dance_len - 1 and curr_timestamp > df_dance.index[index + 1]:
                         index += 1
-                    if df_dance.iloc[index, 0] != None:
-                        cur_pose_landmarks = landmark_pb2.NormalizedLandmarkList()
-                        cur_pose_landmarks.landmark.extend(
-                            df_dance.iloc[index].tolist())
+                    if df_dance.iloc[index, 1] != None:
+                        cur_pose_landmarks = df_dance.iloc[index, 1:]
                         solutions.drawing_utils.draw_landmarks(
                             image,
-                            cur_pose_landmarks,
+                            cur_pose_landmarks.iloc[0],
                             solutions.pose.POSE_CONNECTIONS,
                             solutions.drawing_styles.get_default_pose_landmarks_style())
-                    index += 1
-
+                    index+=1
+                    
+                    
                 if index >= df_dance_len:
                     break
-
+                
             cv2.imshow('Mediapipe Feed', image)
+
 
             if cv2.waitKey(10) & 0xFF == ord('q'):
                 break
@@ -107,7 +107,7 @@ def get_live_data(filename: str, df_dance):
 
     create_folder_if_not_exists(f"final-{title}")
     with open("logs.txt", "w") as file:
-        file.write(f"final-{title}")
+            file.write(f"final-{title}")
 
     df_points.to_hdf(
         f"data/final-{title}/livedata.hdf5", key="livedata")
@@ -116,6 +116,5 @@ def get_live_data(filename: str, df_dance):
 
 if __name__ == "__main__":
     title = "The Robot- Fortnite Emote"
-    df_dance = pd.read_hdf(
-        './data/final-The Robot- Fortnite Emote/videodata.hdf5', key='videodata')
+    df_dance = pd.read_hdf('./data/final-The Robot- Fortnite Emote/videodata.hdf5', key='videodata')
     get_live_data(title, df_dance)
