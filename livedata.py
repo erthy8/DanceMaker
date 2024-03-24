@@ -12,21 +12,41 @@ from mediapipe.tasks.python.components import containers
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 
+import threading
+import soundfile as sf
+import sounddevice as sd
+
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 
-def get_live_data(filename: str, df_dance):
+def play_audio_soundfile(audio_file):
+    # Load the audio file
+    y, sr = sf.read(audio_file)
+
+    # Play the audio using sounddevice
+    sd.play(y, sr)
+    sd.wait()
+
+
+def play_audio_in_thread(audio_file):
+    thread = threading.Thread(target=play_audio_soundfile, args=(audio_file,))
+    thread.start()
+
+
+def get_live_data(title: str, df_dance):
+
     cap = cv2.VideoCapture(0)
 
     df_points = pd.DataFrame({i: [] for i in range(33)})
 
+    audio_flag = False
     # Setup mediapipe instance
     with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
 
         countdown_start_time = time.time()
         real_start_time = countdown_start_time
-        countdown_time = 7
+        countdown_time = 5
         index = 0
         countdown_elapsed_time = (time.time() - countdown_start_time)
 
@@ -40,6 +60,11 @@ def get_live_data(filename: str, df_dance):
                 countdown_elapsed_time = (time.time() - countdown_start_time)
                 real_start_time = time.time()
             else:
+                if not audio_flag:
+                    # Adjust the path as needed
+                    audio_file = f"audio\{title}.mp3"
+                    play_audio_in_thread(audio_file)
+                    audio_flag = True
                 curr_timestamp = int((time.time() - real_start_time) * 1000)
 
                 # Recolor image to RGB
@@ -105,12 +130,12 @@ def get_live_data(filename: str, df_dance):
         cap.release()
         cv2.destroyAllWindows()
 
-    create_folder_if_not_exists(f"final-{title}")
+    create_folder_if_not_exists(str(title))
     with open("logs.txt", "w") as file:
         file.write(f"final-{title}")
 
     df_points.to_hdf(
-        f"data/final-{title}/livedata.hdf5", key="livedata")
+        f"data/{title}/livedata.hdf5", key="livedata")
     print(f"data saved in: data/final-{title}/livedata.hdf5")
 
 
