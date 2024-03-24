@@ -1,5 +1,4 @@
 import numpy as np
-import mediapipe as mp
 import math
 import cv2
 import copy
@@ -7,6 +6,7 @@ import pytube
 from moviepy.editor import VideoFileClip
 from abc import ABC, abstractmethod
 
+import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.components import containers
@@ -40,7 +40,7 @@ class VideoProcessor(ABC):
         output_clip = self.clip.fl_image(self._process_frame)
         output_clip.write_videofile(
             f"outputs/final-{self.title}.mp4", fps=self.clip.fps)
-        print(f"Segmented video saved as outputs/{self.title}.mp4")
+        print(f"Output video saved as outputs/{self.title}.mp4")
         output_clip.close()
         self.frame_count = 0
 
@@ -93,6 +93,7 @@ class VideoPoser(VideoProcessor):
                 image_format=mp.ImageFormat.SRGB, data=frame_data)
             landmarks = self.poser.detect_for_video(
                 pred_img, self.timestamps[self.frame_count])
+            self.frame_count += 1
             # Annotate Frame
             output_frame = np.copy(frame_data)
             d_results = landmarks.pose_landmarks
