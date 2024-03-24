@@ -9,7 +9,6 @@ mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
 def get_all_coords(landmark):
-    print("HELLO")
     #left side coords
     colNames = ["Landmark", "x", "y"]
     df = pd.DataFrame(columns = colNames)
@@ -54,32 +53,51 @@ def calculate_angle(a,b,c):
         
     return angle 
 
-# def get_all_angles(coords):
-#     #   elbow angle, armpit angle, hip angle, knee angle
-#     # 0 - l_shoulder
-#     # 1 - l_elbow
-#     # 2 - l_wrist
-#     # 3 - l_hip
-#     # 4 - l_knee
-#     # 5 - l_ankle
-#     # 6 - rshoulder
-#     # 7 - relbow
-#     # 8 - rwrist
-#     # 9 - r_hip
-#     # 10 - rkne
-#     # 11 - r_ankle
-#     l_elbow_angle = calculate_angle([coords[0][1], coords[1][2]], [coords[1][1], coords[1][2]], [coords[2][1], coords[2][2]])
-#     r_elbow_angle = calculate_angle([coords[6][1], coords[6][2]], [coords[7][1], coords[7][2]], [coords[8][1], coords[8][2]])
+def get_all_angles(coords):
+    #   elbow angle, armpit angle, hip angle, knee angle
+    # 0 - l_shoulder
+    # 1 - l_elbow
+    # 2 - l_wrist
+    # 3 - l_hip
+    # 4 - l_knee
+    # 5 - l_ankle
+    # 6 - rshoulder
+    # 7 - relbow
+    # 8 - rwrist
+    # 9 - r_hip
+    # 10 - rkne
+    # 11 - r_ankle
+    l_elbow_angle = calculate_angle([coords.at[0,"x"], coords.at[0,"y"]], [coords.at[1,"x"], coords.at[1, "y"]], [coords[2,"x"], coords[2, "y"]])
+    r_elbow_angle = calculate_angle([coords.at[6,"x"], coords.at[6,"y"]], [coords.at[7,"x"], coords.at[8, "y"]], [coords[2,"x"], coords[2, "y"]])
     
-#     # l_armpit = calculate_angle([coords[6][1], coords[6][2]], [coords[7][1], coords[7][2]], [coords[8][1], coords[8][2]])
-#     # r_armpit = 
+    # l_armpit = calculate_angle([coords[6][1], coords[6][2]], [coords[7][1], coords[7][2]], [coords[8][1], coords[8][2]])
+    # r_armpit = 
 
-    # r_hip_angle = 
-    # l_hip_angle = 
+    r_hip_angle = 
+    l_hip_angle = 
 
-    # l_knee = 
-    # r_knee = 
-    
+    l_knee = 
+    r_knee = 
+
+def delay(image):
+    cv2.rectangle(image, (0,0), (225,73), (245,117,16), -1)
+    cv2.putText(image, 'Starting in ....', (15,12), 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,0), 1, cv2.LINE_AA)
+    cv2.putText(image, str(3), 
+                (10,60), 
+                cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA)
+    time.sleep(1)
+    cv2.putText(image, str(2), 
+                (10,60), 
+                cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA)
+    time.sleep(1)
+    cv2.putText(image, str(1), 
+                (10,60), 
+                cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA)
+    time.sleep(1)
+    cv2.putText(image, str(0), 
+                (10,60), 
+                cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA)
 
     
 
@@ -102,6 +120,8 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
         # Recolor back to BGR
         image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        
+        delay(image)#pauses program and gives the user a 3,2,1 countdown
         
         # Extract landmarks
         try:
